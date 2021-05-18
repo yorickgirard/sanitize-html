@@ -69,6 +69,36 @@ describe('sanitizeHtml', function() {
   it('should cope identically with capitalized attributes and tags and should tolerate capitalized schemes', function() {
     assert.equal(sanitizeHtml('<A HREF="http://google.com">google</a><a href="HTTPS://google.com">https google</a><a href="ftp://example.com">ftp</a><a href="mailto:test@test.com">mailto</a><a href="/relative.html">relative</a><a href="javascript:alert(0)">javascript</a>'), '<a href="http://google.com">google</a><a href="HTTPS://google.com">https google</a><a href="ftp://example.com">ftp</a><a href="mailto:test@test.com">mailto</a><a href="/relative.html">relative</a><a>javascript</a>');
   });
+  it('should delete the script tag', function() {
+    assert.equal(sanitizeHtml('<script src="https://www.unauthorized.com/lib.js"></script>', {
+      allowedTags: [ 'script' ],
+      allowVulnerableTags: true,
+      allowedAttributes: {
+        script: [ 'src' ]
+      },
+      allowedScriptHostnames: [ 'www.authorized.com' ]
+    }), '<script></script>');
+  });
+  it('should delete the script tag content', function() {
+    assert.equal(sanitizeHtml('<script src="https://www.authorized.com/lib.js"> alert("evil") </script>', {
+      allowedTags: [ 'script' ],
+      allowVulnerableTags: true,
+      allowedAttributes: {
+        script: [ 'src' ]
+      },
+      allowedScriptHostnames: [ 'www.authorized.com' ]
+    }), '<script src="https://www.authorized.com/lib.js"></script>');
+  });
+  it('should leave the content of script elements', function() {
+    assert.equal(sanitizeHtml('<script src="https://www.authorized.com/lib.js"></script>', {
+      allowedTags: [ 'script' ],
+      allowVulnerableTags: true,
+      allowedAttributes: {
+        script: [ 'src' ]
+      },
+      allowedScriptHostnames: [ 'www.authorized.com' ]
+    }), '<script src="https://www.authorized.com/lib.js"></script>');
+  });
   it('should drop the content of script elements', function() {
     assert.equal(sanitizeHtml('<script>alert("ruhroh!");</script><p>Paragraph</p>'), '<p>Paragraph</p>');
   });
